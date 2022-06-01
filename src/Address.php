@@ -135,10 +135,12 @@ class Address implements XmlSerializable
 
     /**
      * @param string $countrySubentity
+     * @return Address
      */
-    public function setCountrySubentity(string $countrySubentity): void
+    public function setCountrySubentity(string $countrySubentity): Address
     {
         $this->countrySubentity = $countrySubentity;
+        return $this;
     }
 
     /**
