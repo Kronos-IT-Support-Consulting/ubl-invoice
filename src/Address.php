@@ -178,7 +178,7 @@ class Address implements XmlSerializable
         }
         if ($this->countrySubentity !== null) {
             $writer->write([
-                Schema::CAC . 'CountrySubentity' => $this->countrySubentity,
+                Schema::CBC . 'CountrySubentity' => $this->countrySubentity,
             ]);
         }
         if ($this->country !== null) {
