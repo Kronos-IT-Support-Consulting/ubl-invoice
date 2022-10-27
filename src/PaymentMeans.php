@@ -120,6 +120,11 @@ class PaymentMeans implements XmlSerializable
         return $this->payeeFinancialAccount;
     }
 
+    public function getCardAccount(): ?CardAccount
+    {
+
+    }
+
     /**
      * @param mixed $payeeFinancialAccount
      * @return PaymentMeans
@@ -167,5 +172,7 @@ class PaymentMeans implements XmlSerializable
                 Schema::CAC . 'PayeeFinancialAccount' => $this->getPayeeFinancialAccount()
             ]);
         }
+
+//        if ($this->get)
     }
 }
