@@ -2,11 +2,14 @@
 
 namespace NumNum\UBL;
 
+use Sabre\Xml\Writer;
+use Sabre\Xml\XmlSerializable;
+
 class CardAccount implements XmlSerializable
 {
-    private ?string $primaryAccountNumberId;
-    private ?string $networkId;
-    private ?string $holderName;
+    private $primaryAccountNumberId;
+    private $networkId;
+    private $holderName;
 
     /**
      * @return string|null
@@ -64,10 +67,6 @@ class CardAccount implements XmlSerializable
 
     public function xmlSerialize(Writer $writer)
     {
-        $writer->write([
-            'name' => Schema::CAC . 'CardAccount',
-        ]);
-
         if ($this->getPrimaryAccountNumberId() !== null) {
             $writer->write([
                 Schema::CBC . 'PrimaryAccountNumberID' => $this->getPrimaryAccountNumberId()

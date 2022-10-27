@@ -18,6 +18,7 @@ class PaymentMeans implements XmlSerializable
     private $instructionNote;
     private $paymentId;
     private $payeeFinancialAccount;
+    private $cardAccount;
 
     /**
      * @return string
@@ -120,9 +121,15 @@ class PaymentMeans implements XmlSerializable
         return $this->payeeFinancialAccount;
     }
 
+    public function setCardAccount(CardAccount $cardAccount): PaymentMeans
+    {
+        $this->cardAccount = $cardAccount;
+        return $this;
+    }
+
     public function getCardAccount(): ?CardAccount
     {
-
+        return $this->cardAccount;
     }
 
     /**
@@ -173,6 +180,10 @@ class PaymentMeans implements XmlSerializable
             ]);
         }
 
-//        if ($this->get)
+        if ($this->getCardAccount() !== null) {
+            $writer->write([
+                Schema::CAC . 'CardAccount' => $this->getCardAccount()
+            ]);
+        }
     }
 }
