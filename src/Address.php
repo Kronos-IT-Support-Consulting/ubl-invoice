@@ -14,7 +14,6 @@ class Address implements XmlSerializable
     private $postalZone;
     private $countrySubentity;
     private $country;
-    private $countrySubentity;
 
     /**
      * @return string
@@ -140,25 +139,6 @@ class Address implements XmlSerializable
     public function setCountry(Country $country): Address
     {
         $this->country = $country;
-        return $this;
-    }
-
-
-    /**
-     * @return string
-     */
-    public function getCountrySubentity(): string
-    {
-        return $this->countrySubentity;
-    }
-
-    /**
-     * @param string $countrySubentity
-     * @return Address
-     */
-    public function setCountrySubentity(string $countrySubentity): Address
-    {
-        $this->countrySubentity = $countrySubentity;
         return $this;
     }
 
