@@ -7,11 +7,12 @@ use Sabre\Xml\XmlSerializable;
 
 class LegalMonetaryTotal implements XmlSerializable
 {
-    private $lineExtensionAmount;
-    private $taxExclusiveAmount;
-    private $taxInclusiveAmount;
+    private $lineExtensionAmount = 0;
+    private $taxExclusiveAmount = 0;
+    private $taxInclusiveAmount = 0;
     private $allowanceTotalAmount = 0;
-    private $payableAmount;
+    private $prepaidAmount;
+    private $payableAmount = 0;
 
     /**
      * @return float
@@ -86,6 +87,24 @@ class LegalMonetaryTotal implements XmlSerializable
     }
 
     /**
+     * @return ?float
+     */
+    public function getPrepaidAmount(): ?float
+    {
+        return $this->prepaidAmount;
+    }
+
+    /**
+     * @param ?float $prepaidAmount
+     * @return LegalMonetaryTotal
+     */
+    public function setPrepaidAmount(?float $prepaidAmount): LegalMonetaryTotal
+    {
+        $this->prepaidAmount = $prepaidAmount;
+        return $this;
+    }
+
+    /**
      * @return float
      */
     public function getPayableAmount(): ?float
@@ -109,7 +128,7 @@ class LegalMonetaryTotal implements XmlSerializable
      * @param Writer $writer
      * @return void
      */
-    public function xmlSerialize(Writer $writer)
+    public function xmlSerialize(Writer $writer): void
     {
         $writer->write([
             [
@@ -143,7 +162,22 @@ class LegalMonetaryTotal implements XmlSerializable
                     'currencyID' => Generator::$currencyID
                 ]
 
-            ],
+            ]
+        ]);
+
+        if ($this->prepaidAmount !== null) {
+            $writer->write([
+                [
+                    'name' => Schema::CBC . 'PrepaidAmount',
+                    'value' => number_format($this->prepaidAmount, 2, '.', ''),
+                    'attributes' => [
+                        'currencyID' => Generator::$currencyID
+                    ]
+                ]
+            ]);
+        }
+
+        $writer->write([
             [
                 'name' => Schema::CBC . 'PayableAmount',
                 'value' => number_format($this->payableAmount, 2, '.', ''),

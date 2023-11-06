@@ -13,17 +13,31 @@ If you want to add additional tags, attributes or functionality to the library, 
 Please try to follow this workflow:
 
 - Fork the project
-- Create a new branch forked from the master branch with a title for your feater (e.g. feature-that-i-want)
+- Create a new branch forked from the master branch with a title for your feature (e.g. feature-that-i-want)
 - Commit all your code into this branch until you are happy with your contribution
 - Document your changes in the **changelog/next-release.md** file ⚠️
 - If possible; try to add unit tests for your contribution
 - Create a pull request with your commits
 
-## Formatting
+## Formatting ⚠️
 
 Please try to follow [PSR-12](https://www.php-fig.org/psr/psr-12/) rules when writing code. A PSR-12 compliant [phpcs.xml](phpcs.xml) is provided, so if your editor supports [phpcs](https://github.com/squizlabs/PHP_CodeSniffer), your editor should automatically warn you if you are deviating from PSR-12 compliant formatting.
 
-## Unit testing
+You can also check code style manually by running `composer phpcs` in the projects' root folder on your disk.
+
+```zsh
+$ cd ubl-invoice
+$ composer phpcs
+```
+
+The project also has PHPStan integrated for code checking, which can be triggered with:
+
+```zsh
+$ cd ubl-invoice
+$ composer phpstan
+```
+
+## Unit testing ⚠️
 
 ### A note on unit testing
 
@@ -33,14 +47,14 @@ Although unit testing is included, this repository does not provide exhaustive u
 
 To run the complete suite of unit tests
 
-```sh
+```zsh
 $ cd ubl-invoice
 $ composer test
 ```
 
 To run a single unit test
 
-```sh
+```zsh
 $ cd ubl-invoice
-$ composer test tests/SimpleInvoiceTest
+$ composer test tests/SimpleInvoiceTest.php
 ```

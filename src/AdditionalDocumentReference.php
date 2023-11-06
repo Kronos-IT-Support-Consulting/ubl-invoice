@@ -9,6 +9,8 @@ class AdditionalDocumentReference implements XmlSerializable
 {
     private $id;
     private $documentType;
+    private $documentTypeCode;
+    private $documentDescription;
     private $attachment;
 
     /**
@@ -48,6 +50,42 @@ class AdditionalDocumentReference implements XmlSerializable
     }
 
     /**
+     * @return int
+     */
+    public function getDocumentTypeCode(): ?int
+    {
+        return $this->documentTypeCode;
+    }
+
+    /**
+     * @param int $documentTypeCode
+     * @return AdditionalDocumentReference
+     */
+    public function setDocumentTypeCode(int $documentTypeCode): AdditionalDocumentReference
+    {
+        $this->documentTypeCode = $documentTypeCode;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDocumentDescription(): ?string
+    {
+        return $this->documentDescription;
+    }
+
+    /**
+     * @param string $documentDescription
+     * @return AdditionalDocumentReference
+     */
+    public function setDocumentDescription(string $documentDescription): AdditionalDocumentReference
+    {
+        $this->documentDescription = $documentDescription;
+        return $this;
+    }
+
+    /**
      * @return Attachment
      */
     public function getAttachment(): ?Attachment
@@ -71,14 +109,30 @@ class AdditionalDocumentReference implements XmlSerializable
      * @param Writer $writer
      * @return void
      */
-    public function xmlSerialize(Writer $writer)
+    public function xmlSerialize(Writer $writer): void
     {
         $writer->write([ Schema::CBC . 'ID' => $this->id ]);
-        if ($this->documentType !== null) {
+
+        if ($this->documentTypeCode !== null) {
             $writer->write([
-                Schema::CAC . 'DocumentType' => $this->documentType
+                Schema::CBC . 'DocumentTypeCode' => $this->documentTypeCode
+            ]);
+        } else if ($this->documentType !== null) {
+            $writer->write([
+                Schema::CBC . 'DocumentType' => $this->documentType
             ]);
         }
-        $writer->write([ Schema::CAC . 'Attachment' => $this->attachment ]);
+
+        if ($this->documentDescription !== null) {
+            $writer->write([
+                Schema::CBC . 'DocumentDescription' => $this->documentDescription
+            ]);
+        }
+
+        if ($this->attachment !== null) {
+            $writer->write([
+              Schema::CAC . 'Attachment' => $this->attachment
+            ]);
+        }
     }
 }

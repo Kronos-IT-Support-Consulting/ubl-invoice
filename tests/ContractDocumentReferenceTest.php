@@ -2,12 +2,13 @@
 
 namespace NumNum\UBL\Tests;
 
+use NumNum\UBL\InvoiceTypeCode;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Test an UBL2.2 invoice document
  */
-class SimpleUBL22InvoiceTest extends TestCase
+class ContractDocumentReferenceTest extends TestCase
 {
     private $schema = 'http://docs.oasis-open.org/ubl/os-UBL-2.2/xsd/maindoc/UBL-Invoice-2.2.xsd';
 
@@ -16,8 +17,7 @@ class SimpleUBL22InvoiceTest extends TestCase
     {
         // Address country
         $country = (new \NumNum\UBL\Country())
-            ->setIdentificationCode('BE')
-            ->setListId('ISO3166-1:Alpha2');
+            ->setIdentificationCode('BE');
 
         // Full address
         $address = (new \NumNum\UBL\Address())
@@ -55,7 +55,6 @@ class SimpleUBL22InvoiceTest extends TestCase
         $price = (new \NumNum\UBL\Price())
             ->setBaseQuantity(1)
             ->setUnitCode(\NumNum\UBL\UnitCode::UNIT)
-            ->setUnitCodeListId('UNECERec20')
             ->setPriceAmount(10);
 
         // Invoice Line tax totals
@@ -66,8 +65,6 @@ class SimpleUBL22InvoiceTest extends TestCase
         $invoiceLine = (new \NumNum\UBL\InvoiceLine())
             ->setId(0)
             ->setItem($productItem)
-            ->setUnitCode('C62')
-            ->setUnitCodeListID('UNECERec20')
             ->setPrice($price)
             ->setTaxTotal($lineTaxTotal)
             ->setInvoicedQuantity(1);
@@ -90,17 +87,29 @@ class SimpleUBL22InvoiceTest extends TestCase
             ->addTaxSubTotal($taxSubTotal)
             ->setTaxAmount(2.1);
 
+        $contractDocumentReference = (new \NumNum\UBL\ContractDocumentReference())
+            ->setId("123Test");
+
+        $invoicePeriod = (new \NumNum\UBL\InvoicePeriod())
+            ->setStartDate(new \DateTime('-31 days'))
+            ->setEndDate(new \DateTime());
+
         // Invoice object
         $invoice = (new \NumNum\UBL\Invoice())
             ->setUBLVersionID('2.2')
             ->setId(1234)
             ->setCopyIndicator(false)
             ->setIssueDate(new \DateTime())
+            ->setInvoiceTypeCode(\NumNum\UBL\InvoiceTypeCode::INVOICE)
+            ->setDueDate(new \DateTime())
             ->setAccountingSupplierParty($supplierCompany)
             ->setAccountingCustomerParty($clientCompany)
             ->setInvoiceLines($invoiceLines)
             ->setLegalMonetaryTotal($legalMonetaryTotal)
-            ->setTaxTotal($taxTotal);
+            ->setTaxTotal($taxTotal)
+            ->setContractDocumentReference($contractDocumentReference)
+            ->setBuyerReference("SomeReference")
+            ->setInvoicePeriod($invoicePeriod);
 
         // Test created object
         // Use \NumNum\UBL\Generator to generate an XML string
@@ -112,7 +121,7 @@ class SimpleUBL22InvoiceTest extends TestCase
         $dom = new \DOMDocument;
         $dom->loadXML($outputXMLString);
 
-        $dom->save('./tests/SimpleUBL22InvoiceTest.xml');
+        $dom->save('./tests/ContractDocumentReferenceTest.xml');
 
         $this->assertEquals(true, $dom->schemaValidate($this->schema));
     }

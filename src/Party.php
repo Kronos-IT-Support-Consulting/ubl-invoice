@@ -9,11 +9,15 @@ class Party implements XmlSerializable
 {
     private $name;
     private $partyIdentificationId;
+    private $partyIdentificationSchemeId;
+    private $partyIdentificationSchemeName;
     private $postalAddress;
     private $physicalLocation;
     private $contact;
     private $partyTaxScheme;
     private $legalEntity;
+    private $endpointID;
+    private $endpointID_schemeID;
 
     /**
      * @return string
@@ -48,6 +52,42 @@ class Party implements XmlSerializable
     public function setPartyIdentificationId(?string $partyIdentificationId): Party
     {
         $this->partyIdentificationId = $partyIdentificationId;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPartyIdentificationSchemeId(): ?string
+    {
+        return $this->partyIdentificationSchemeId;
+    }
+
+    /**
+     * @param string $partyIdentificationSchemeId
+     * @return Party
+     */
+    public function setPartyIdentificationSchemeId(?string $partyIdentificationSchemeId): Party
+    {
+        $this->partyIdentificationSchemeId = $partyIdentificationSchemeId;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPartyIdentificationSchemeName(): ?string
+    {
+        return $this->partyIdentificationSchemeName;
+    }
+
+    /**
+     * @param string $partyIdentificationSchemeName
+     * @return Party
+     */
+    public function setPartyIdentificationSchemeName(?string $partyIdentificationSchemeName): Party
+    {
+        $this->partyIdentificationSchemeName = $partyIdentificationSchemeName;
         return $this;
     }
 
@@ -142,25 +182,70 @@ class Party implements XmlSerializable
     }
 
     /**
+     * @param $endpointID
+     * @param int|string $schemeID See list at https://docs.peppol.eu/poacc/billing/3.0/codelist/eas/
+     * @return Party
+     */
+    public function setEndpointID($endpointID, $schemeID): Party
+    {
+        $this->endpointID = $endpointID;
+        $this->endpointID_schemeID = $schemeID;
+        return $this;
+    }
+
+    /**
      * The xmlSerialize method is called during xml writing.
      *
      * @param Writer $writer
      * @return void
      */
-    public function xmlSerialize(Writer $writer)
+    public function xmlSerialize(Writer $writer): void
     {
+        if ($this->endpointID !== null && $this->endpointID_schemeID !== null) {
+            $writer->write([
+                [
+                    'name' => Schema::CBC . 'EndpointID',
+                    'value' => $this->endpointID,
+                    'attributes' => [
+                        'schemeID' => is_numeric($this->endpointID_schemeID)
+                            ? sprintf('%04d', +$this->endpointID_schemeID)
+                            : $this->endpointID_schemeID
+                    ]
+                ]
+            ]);
+        }
+
         if ($this->partyIdentificationId !== null) {
+            $partyIdentificationAttributes = [];
+
+            if (!empty($this->getPartyIdentificationSchemeId())) {
+                $partyIdentificationAttributes['schemeID'] = $this->getPartyIdentificationSchemeId();
+            }
+
+            if (!empty($this->getPartyIdentificationSchemeName())) {
+                $partyIdentificationAttributes['schemeName'] = $this->getPartyIdentificationSchemeName();
+            }
+
             $writer->write([
                 Schema::CAC . 'PartyIdentification' => [
-                    Schema::CBC . 'ID' => $this->partyIdentificationId
+                    [
+                        'name' => Schema::CBC . 'ID',
+                        'value' => $this->partyIdentificationId,
+                        'attributes' => $partyIdentificationAttributes
+                    ]
                 ],
             ]);
         }
 
+        if ($this->name !== null) {
+            $writer->write([
+                Schema::CAC . 'PartyName' => [
+                    Schema::CBC . 'Name' => $this->name
+                ]
+            ]);
+        }
+
         $writer->write([
-            Schema::CAC . 'PartyName' => [
-                Schema::CBC . 'Name' => $this->name
-            ],
             Schema::CAC . 'PostalAddress' => $this->postalAddress
         ]);
 

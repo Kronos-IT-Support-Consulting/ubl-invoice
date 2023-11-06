@@ -12,6 +12,7 @@ class Address implements XmlSerializable
     private $buildingNumber;
     private $cityName;
     private $postalZone;
+    private $countrySubentity;
     private $country;
     private $countrySubentity;
 
@@ -107,6 +108,24 @@ class Address implements XmlSerializable
     }
 
     /**
+     * @return string
+     */
+    public function getCountrySubentity(): ?string
+    {
+        return $this->countrySubentity;
+    }
+
+    /**
+     * @param string $subentity
+     * @return Address
+     */
+    public function setCountrySubentity(string $countrySubentity): Address
+    {
+        $this->countrySubentity = $countrySubentity;
+        return $this;
+    }
+    
+    /**
      * @return Country
      */
     public function getCountry(): ?Country
@@ -149,7 +168,7 @@ class Address implements XmlSerializable
      * @param Writer $writer
      * @return void
      */
-    public function xmlSerialize(Writer $writer)
+    public function xmlSerialize(Writer $writer): void
     {
         if ($this->streetName !== null) {
             $writer->write([

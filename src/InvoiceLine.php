@@ -7,10 +7,12 @@ use Sabre\Xml\XmlSerializable;
 
 class InvoiceLine implements XmlSerializable
 {
+    public $xmlTagName = 'InvoiceLine';
     private $id;
-    private $invoicedQuantity;
+    protected $invoicedQuantity;
     private $lineExtensionAmount;
-    private $unitCode = 'MON';
+    private $unitCode = UnitCode::UNIT;
+    private $unitCodeListId;
     private $taxTotal;
     private $invoicePeriod;
     private $note;
@@ -19,6 +21,9 @@ class InvoiceLine implements XmlSerializable
     private $accountingCostCode;
     private $accountingCost;
     private $allowanceCharge;
+
+    // See CreditNoteLine.php
+    protected $isCreditNoteLine = false;
 
     /**
      * @return string
@@ -47,7 +52,7 @@ class InvoiceLine implements XmlSerializable
     }
 
     /**
-     * @param float $invoicedQuantity
+     * @param ?float $invoicedQuantity
      * @return InvoiceLine
      */
     public function setInvoicedQuantity(?float $invoicedQuantity): InvoiceLine
@@ -185,6 +190,24 @@ class InvoiceLine implements XmlSerializable
     /**
      * @return string
      */
+    public function getUnitCodeListId(): ?string
+    {
+        return $this->unitCodeListId;
+    }
+
+    /**
+     * @param string $unitCodeListId
+     * @return InvoiceLine
+     */
+    public function setUnitCodeListId(?string $unitCodeListId)
+    {
+        $this->unitCodeListId = $unitCodeListId;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
     public function getAccountingCostCode(): ?string
     {
         return $this->accountingCostCode;
@@ -233,7 +256,7 @@ class InvoiceLine implements XmlSerializable
      * @param Writer $writer
      * @return void
      */
-    public function xmlSerialize(Writer $writer)
+    public function xmlSerialize(Writer $writer): void
     {
         $writer->write([
             Schema::CBC . 'ID' => $this->id
@@ -245,13 +268,20 @@ class InvoiceLine implements XmlSerializable
             ]);
         }
 
+        $invoicedQuantityAttributes = [
+            'unitCode' => $this->unitCode,
+        ];
+
+        if (!empty($this->getUnitCodeListId())) {
+            $invoicedQuantityAttributes['unitCodeListID'] = $this->getUnitCodeListId();
+        }
+
         $writer->write([
             [
-                'name' => Schema::CBC . 'InvoicedQuantity',
+                'name' => Schema::CBC .
+                    ($this->isCreditNoteLine ? 'CreditedQuantity' : 'InvoicedQuantity'),
                 'value' => number_format($this->invoicedQuantity, 2, '.', ''),
-                'attributes' => [
-                    'unitCode' => $this->unitCode
-                ]
+                'attributes' => $invoicedQuantityAttributes
             ],
             [
                 'name' => Schema::CBC . 'LineExtensionAmount',
@@ -286,6 +316,7 @@ class InvoiceLine implements XmlSerializable
                 Schema::CAC . 'TaxTotal' => $this->taxTotal
             ]);
         }
+
         $writer->write([
             Schema::CAC . 'Item' => $this->item,
         ]);

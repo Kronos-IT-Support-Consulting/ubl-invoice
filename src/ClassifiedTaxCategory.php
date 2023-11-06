@@ -18,8 +18,6 @@ class ClassifiedTaxCategory implements XmlSerializable
     private $schemeID;
     private $schemeName;
 
-    public const UNCL5305 = 'UNCL5305';
-
     /**
      * @return string
      */
@@ -30,13 +28,9 @@ class ClassifiedTaxCategory implements XmlSerializable
         }
 
         if ($this->getPercent() !== null) {
-            if ($this->getPercent() >= 21) {
-                return 'S';
-            } elseif ($this->getPercent() <= 21 && $this->getPercent() >= 6) {
-                return 'AA';
-            } else {
-                return 'Z';
-            }
+            return ($this->getPercent() > 0)
+                ? UNCL5305::STANDARD_RATE
+                : UNCL5305::ZERO_RATED_GOODS;
         }
 
         return null;
@@ -165,7 +159,7 @@ class ClassifiedTaxCategory implements XmlSerializable
      * @param Writer $writer
      * @return void
      */
-    public function xmlSerialize(Writer $writer)
+    public function xmlSerialize(Writer $writer): void
     {
         $this->validate();
 
@@ -178,13 +172,9 @@ class ClassifiedTaxCategory implements XmlSerializable
         }
 
         $writer->write([
-            [
-                'name' => Schema::CBC . 'ID',
-                'value' => $this->getId(),
-                'attributes' => $schemeAttributes
-
-            ],
-            Schema::CBC . 'Percent' => number_format($this->percent, 2, '.', ''),
+            'name' => Schema::CBC . 'ID',
+            'value' => $this->getId(),
+            'attributes' => $schemeAttributes
         ]);
 
         if ($this->name !== null) {
@@ -192,6 +182,10 @@ class ClassifiedTaxCategory implements XmlSerializable
                 Schema::CBC . 'Name' => $this->name,
             ]);
         }
+
+        $writer->write([
+            Schema::CBC . 'Percent' => number_format($this->percent, 2, '.', ''),
+        ]);
 
         if ($this->taxExemptionReasonCode !== null) {
             $writer->write([

@@ -10,12 +10,14 @@ use InvalidArgumentException;
 
 class Invoice implements XmlSerializable
 {
+    public $xmlTagName = 'Invoice';
     private $UBLVersionID = '2.1';
     private $customizationID = '1.0';
+    private $profileID;
     private $id;
     private $copyIndicator;
     private $issueDate;
-    private $invoiceTypeCode = InvoiceTypeCode::INVOICE;
+    protected $invoiceTypeCode = InvoiceTypeCode::INVOICE;
     private $note;
     private $taxPointDate;
     private $dueDate;
@@ -26,9 +28,10 @@ class Invoice implements XmlSerializable
     private $paymentMeans;
     private $taxTotal;
     private $legalMonetaryTotal;
-    private $invoiceLines;
+    /** @var InvoiceLine[] $invoiceLines */
+    protected $invoiceLines;
     private $allowanceCharges;
-    private $additionalDocumentReference;
+    private $additionalDocumentReferences = [];
     private $documentCurrencyCode = 'EUR';
     private $buyerReference;
     private $accountingCostCode;
@@ -78,9 +81,19 @@ class Invoice implements XmlSerializable
      * @param mixed $customizationID
      * @return Invoice
      */
-    public function setCustomizationID(?string $id): Invoice
+    public function setCustomizationID(?string $customizationID): Invoice
     {
-        $this->customizationID = $id;
+        $this->customizationID = $customizationID;
+        return $this;
+    }
+
+    /**
+     * @param mixed $profileID
+     * @return Invoice
+     */
+    public function setProfileID(?string $profileID): Invoice
+    {
+        $this->profileID = $profileID;
         return $this;
     }
 
@@ -367,10 +380,19 @@ class Invoice implements XmlSerializable
 
     /**
      * @return AdditionalDocumentReference
+     * @deprecated Deprecated since v1.16 - Replace implementation with setAdditionalDocumentReference or addAdditionalDocumentReference to add/set a single AdditionalDocumentReference
      */
     public function getAdditionalDocumentReference(): ?AdditionalDocumentReference
     {
-        return $this->additionalDocumentReference;
+        return $this->additionalDocumentReferences[0] ?? null;
+    }
+
+    /**
+     * @return array<AdditionalDocumentReference>
+     */
+    public function getAdditionalDocumentReferences(): array
+    {
+        return $this->additionalDocumentReferences ?? [];
     }
 
     /**
@@ -379,7 +401,27 @@ class Invoice implements XmlSerializable
      */
     public function setAdditionalDocumentReference(AdditionalDocumentReference $additionalDocumentReference): Invoice
     {
-        $this->additionalDocumentReference = $additionalDocumentReference;
+        $this->additionalDocumentReferences = [$additionalDocumentReference];
+        return $this;
+    }
+
+    /**
+     * @param AdditionalDocumentReference $additionalDocumentReference
+     * @return Invoice
+     */
+    public function setAdditionalDocumentReferences(array $additionalDocumentReference): Invoice
+    {
+        $this->additionalDocumentReferences = $additionalDocumentReference;
+        return $this;
+    }
+
+    /**
+     * @param AdditionalDocumentReference $additionalDocumentReference
+     * @return Invoice
+     */
+    public function addAdditionalDocumentReference(AdditionalDocumentReference $additionalDocumentReference): Invoice
+    {
+        $this->additionalDocumentReferences[] = $additionalDocumentReference;
         return $this;
     }
 
@@ -533,13 +575,22 @@ class Invoice implements XmlSerializable
      * @param Writer $writer
      * @return void
      */
-    public function xmlSerialize(Writer $writer)
+    public function xmlSerialize(Writer $writer): void
     {
         $this->validate();
 
         $writer->write([
             Schema::CBC . 'UBLVersionID' => $this->UBLVersionID,
             Schema::CBC . 'CustomizationID' => $this->customizationID,
+        ]);
+
+        if ($this->profileID !== null) {
+            $writer->write([
+                Schema::CBC . 'ProfileID' => $this->profileID
+            ]);
+        }
+
+        $writer->write([
             Schema::CBC . 'ID' => $this->id
         ]);
 
@@ -553,7 +604,7 @@ class Invoice implements XmlSerializable
             Schema::CBC . 'IssueDate' => $this->issueDate->format('Y-m-d'),
         ]);
 
-        if ($this->dueDate !== null) {
+        if ($this->dueDate !== null && $this->xmlTagName === 'Invoice') {
             $writer->write([
                 Schema::CBC . 'DueDate' => $this->dueDate->format('Y-m-d')
             ]);
@@ -561,7 +612,7 @@ class Invoice implements XmlSerializable
 
         if ($this->invoiceTypeCode !== null) {
             $writer->write([
-                Schema::CBC . 'InvoiceTypeCode' => $this->invoiceTypeCode
+                Schema::CBC . $this->xmlTagName . 'TypeCode' => $this->invoiceTypeCode
             ]);
         }
 
@@ -593,12 +644,6 @@ class Invoice implements XmlSerializable
             ]);
         }
 
-        if ($this->contractDocumentReference !== null) {
-            $writer->write([
-                Schema::CAC . 'ContractDocumentReference' => $this->contractDocumentReference,
-            ]);
-        }
-
         if ($this->invoicePeriod != null) {
             $writer->write([
                 Schema::CAC . 'InvoicePeriod' => $this->invoicePeriod
@@ -611,10 +656,18 @@ class Invoice implements XmlSerializable
             ]);
         }
 
-        if ($this->additionalDocumentReference !== null) {
+        if ($this->contractDocumentReference !== null) {
             $writer->write([
-                Schema::CAC . 'AdditionalDocumentReference' => $this->additionalDocumentReference
+                Schema::CAC . 'ContractDocumentReference' => $this->contractDocumentReference,
             ]);
+        }
+
+        if (!empty($this->additionalDocumentReferences)) {
+            foreach ($this->additionalDocumentReferences as $additionalDocumentReference) {
+                $writer->write([
+                    Schema::CAC . 'AdditionalDocumentReference' => $additionalDocumentReference
+                ]);
+            }
         }
 
         if ($this->supplierAssignedAccountID !== null) {
@@ -671,7 +724,7 @@ class Invoice implements XmlSerializable
 
         foreach ($this->invoiceLines as $invoiceLine) {
             $writer->write([
-                Schema::CAC . 'InvoiceLine' => $invoiceLine
+                Schema::CAC . $invoiceLine->xmlTagName => $invoiceLine
             ]);
         }
     }

@@ -5,9 +5,9 @@ namespace NumNum\UBL\Tests;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Test an UBL2.2 invoice document
+ * Test an UBL2.1 invoice document
  */
-class SimpleUBL22InvoiceTest extends TestCase
+class EmptyAttachmentTest extends TestCase
 {
     private $schema = 'http://docs.oasis-open.org/ubl/os-UBL-2.2/xsd/maindoc/UBL-Invoice-2.2.xsd';
 
@@ -16,8 +16,7 @@ class SimpleUBL22InvoiceTest extends TestCase
     {
         // Address country
         $country = (new \NumNum\UBL\Country())
-            ->setIdentificationCode('BE')
-            ->setListId('ISO3166-1:Alpha2');
+            ->setIdentificationCode('BE');
 
         // Full address
         $address = (new \NumNum\UBL\Address())
@@ -33,10 +32,18 @@ class SimpleUBL22InvoiceTest extends TestCase
             ->setPhysicalLocation($address)
             ->setPostalAddress($address);
 
+        // Client contact node
+        $clientContact = (new \NumNum\UBL\Contact())
+            ->setName('Client name')
+            ->setElectronicMail('email@client.com')
+            ->setTelephone('0032 472 123 456')
+            ->setTelefax('0032 9 1234 567');
+
         // Client company node
         $clientCompany = (new \NumNum\UBL\Party())
             ->setName('My client')
-            ->setPostalAddress($address);
+            ->setPostalAddress($address)
+            ->setContact($clientContact);
 
         $legalMonetaryTotal = (new \NumNum\UBL\LegalMonetaryTotal())
             ->setPayableAmount(10 + 2)
@@ -49,30 +56,52 @@ class SimpleUBL22InvoiceTest extends TestCase
         // Product
         $productItem = (new \NumNum\UBL\Item())
             ->setName('Product Name')
-            ->setDescription('Product Description');
+            ->setDescription('Product Description')
+            ->setSellersItemIdentification('SELLERID');
 
         // Price
         $price = (new \NumNum\UBL\Price())
             ->setBaseQuantity(1)
             ->setUnitCode(\NumNum\UBL\UnitCode::UNIT)
-            ->setUnitCodeListId('UNECERec20')
             ->setPriceAmount(10);
 
         // Invoice Line tax totals
         $lineTaxTotal = (new \NumNum\UBL\TaxTotal())
             ->setTaxAmount(2.1);
 
+        // InvoicePeriod
+        $invoicePeriod = (new \NumNum\UBL\InvoicePeriod())
+            ->setStartDate(new \DateTime());
+
         // Invoice Line(s)
-        $invoiceLine = (new \NumNum\UBL\InvoiceLine())
+        $invoiceLines = [];
+
+        $invoiceLines[] = (new \NumNum\UBL\InvoiceLine())
             ->setId(0)
             ->setItem($productItem)
-            ->setUnitCode('C62')
-            ->setUnitCodeListID('UNECERec20')
+            ->setInvoicePeriod($invoicePeriod)
             ->setPrice($price)
             ->setTaxTotal($lineTaxTotal)
             ->setInvoicedQuantity(1);
 
-        $invoiceLines = [$invoiceLine];
+        $invoiceLines[] = (new \NumNum\UBL\InvoiceLine())
+            ->setId(0)
+            ->setItem($productItem)
+            ->setInvoicePeriod($invoicePeriod)
+            ->setPrice($price)
+            ->setAccountingCost('Product 123')
+            ->setTaxTotal($lineTaxTotal)
+            ->setInvoicedQuantity(1);
+
+        $invoiceLines[] = (new \NumNum\UBL\InvoiceLine())
+            ->setId(0)
+            ->setItem($productItem)
+            ->setInvoicePeriod($invoicePeriod)
+            ->setPrice($price)
+            ->setAccountingCostCode('Product 123')
+            ->setTaxTotal($lineTaxTotal)
+            ->setInvoicedQuantity(1);
+
 
         // Total Taxes
         $taxCategory = (new \NumNum\UBL\TaxCategory())
@@ -86,21 +115,34 @@ class SimpleUBL22InvoiceTest extends TestCase
             ->setTaxAmount(2.1)
             ->setTaxCategory($taxCategory);
 
+
         $taxTotal = (new \NumNum\UBL\TaxTotal())
             ->addTaxSubTotal($taxSubTotal)
             ->setTaxAmount(2.1);
 
+        // Attachment
+        $attachment = (new \NumNum\UBL\Attachment())
+            ->setFilePath(__DIR__.DIRECTORY_SEPARATOR.'SampleInvoice.pdf');
+
+		$additionalDocumentReference = new \NumNum\UBL\AdditionalDocumentReference();
+		$additionalDocumentReference->setId('SomeID');
+		$additionalDocumentReference->setDocumentTypeCode(130);
+
+        // Not adding an attachment to AdditionalDocumentReference should not trigger an error
+		// $additionalDocumentReference->setAttachment($attachment);
+
         // Invoice object
         $invoice = (new \NumNum\UBL\Invoice())
-            ->setUBLVersionID('2.2')
             ->setId(1234)
             ->setCopyIndicator(false)
             ->setIssueDate(new \DateTime())
             ->setAccountingSupplierParty($supplierCompany)
             ->setAccountingCustomerParty($clientCompany)
+            ->setSupplierAssignedAccountID('10001')
             ->setInvoiceLines($invoiceLines)
             ->setLegalMonetaryTotal($legalMonetaryTotal)
-            ->setTaxTotal($taxTotal);
+            ->setTaxTotal($taxTotal)
+            ->setAdditionalDocumentReference($additionalDocumentReference);
 
         // Test created object
         // Use \NumNum\UBL\Generator to generate an XML string
@@ -112,7 +154,7 @@ class SimpleUBL22InvoiceTest extends TestCase
         $dom = new \DOMDocument;
         $dom->loadXML($outputXMLString);
 
-        $dom->save('./tests/SimpleUBL22InvoiceTest.xml');
+        $dom->save('./tests/EmptyAttachmentTest.xml');
 
         $this->assertEquals(true, $dom->schemaValidate($this->schema));
     }
