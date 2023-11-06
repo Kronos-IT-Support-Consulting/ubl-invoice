@@ -12,6 +12,7 @@ class Item implements XmlSerializable
     private $buyersItemIdentification;
     private $sellersItemIdentification;
     private $classifiedTaxCategory;
+    private ?CommodityClassification $commodityClassification = null;
 
     /**
      * @return string
@@ -121,6 +122,12 @@ class Item implements XmlSerializable
             Schema::CBC . 'Name' => $this->name
         ]);
 
+        if (!empty($this->getDescription())) {
+            $writer->write([
+                Schema::CBC . 'Description' => $this->description
+            ]);
+        }
+
         if (!empty($this->getBuyersItemIdentification())) {
             $writer->write([
                 Schema::CAC . 'BuyersItemIdentification' => [
@@ -137,10 +144,27 @@ class Item implements XmlSerializable
             ]);
         }
 
+        if (!empty($this->getCommodityClassification())) {
+            $writer->write([
+                Schema::CAC . 'CommodityClassification' => $this->getCommodityClassification()
+            ]);
+        }
+
         if (!empty($this->getClassifiedTaxCategory())) {
             $writer->write([
                 Schema::CAC . 'ClassifiedTaxCategory' => $this->getClassifiedTaxCategory()
             ]);
         }
+    }
+
+    public function getCommodityClassification(): ?CommodityClassification
+    {
+        return $this->commodityClassification;
+    }
+
+    public function setCommodityClassification(?CommodityClassification $commodityClassification): static
+    {
+        $this->commodityClassification = $commodityClassification;
+        return $this;
     }
 }
